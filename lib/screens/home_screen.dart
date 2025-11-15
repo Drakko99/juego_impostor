@@ -16,7 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final GameRepository _repo = GameRepository();
   List<Category> _categories = [];
   bool _loading = true;
-  int _playerCount = 4;
+
+  int _playerCount = 4; // número de jugadores (3–12)
 
   @override
   void initState() {
@@ -61,7 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (_) => const CustomWordsScreen(),
           ),
         )
-        .then((_) => _loadCategories()); // por si cambias algo
+        .then((_) => _loadCategories());
+  }
+
+  void _increasePlayers() {
+    setState(() {
+      if (_playerCount < 12) {
+        _playerCount++;
+      }
+    });
+  }
+
+  void _decreasePlayers() {
+    setState(() {
+      if (_playerCount > 3) {
+        _playerCount--;
+      }
+    });
   }
 
   @override
@@ -69,36 +86,45 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Juego del Impostor'),
-        actions: [
-          IconButton(
-            onPressed: _openCustomWords,
-            icon: const Icon(Icons.edit),
-            tooltip: 'Palabras personalizadas',
-          ),
-        ],
+        // Ya no hay icono de editar aquí, el botón va junto a "Personalizada"
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+
+                // 🔢 Selector de número de jugadores (grande + botones +/-)
                 Text(
-                  'Número de jugadores: $_playerCount',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  'Número de jugadores',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                Slider(
-                  value: _playerCount.toDouble(),
-                  min: 3,
-                  max: 12,
-                  divisions: 9,
-                  label: '$_playerCount',
-                  onChanged: (value) {
-                    setState(() {
-                      _playerCount = value.toInt();
-                    });
-                  },
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: _decreasePlayers,
+                      icon: const Icon(Icons.remove),
+                      iconSize: 32,
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      '$_playerCount',
+                      style: Theme.of(context).textTheme.displayMedium,
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      onPressed: _increasePlayers,
+                      icon: const Icon(Icons.add),
+                      iconSize: 32,
+                    ),
+                  ],
                 ),
+
+                const SizedBox(height: 24),
                 const Divider(),
+
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
@@ -106,19 +132,58 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
+
+                // Lista de categorías
                 Expanded(
                   child: ListView.builder(
                     itemCount: _categories.length,
                     itemBuilder: (context, index) {
                       final c = _categories[index];
-                      return SwitchListTile(
-                        title: Text(c.name),
-                        value: c.enabled,
-                        onChanged: (val) => _toggleCategory(c, val),
+
+                      // Categorías normales 
+                      if (!c.isCustom) {
+                        return SwitchListTile(
+                          title: Text(c.name),
+                          value: c.enabled,
+                          onChanged: (val) => _toggleCategory(c, val),
+                        );
+                      }
+
+                      // Categoría personalizada
+                      return ListTile(
+                        title: Row(
+                          children: [
+                            // Texto "Personalizada"
+                            Text(c.name),
+
+                            const SizedBox(width: 8),
+
+                            // Botón "+" junto al texto
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              tooltip: 'Añadir palabras personalizadas',
+                              onPressed: _openCustomWords,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(), // para que no ocupe demasiado
+                            ),
+
+                            const Spacer(),
+
+                            // Switch a la derecha, como en el resto de categorías
+                            Switch(
+                              value: c.enabled,
+                              onChanged: (val) => _toggleCategory(c, val),
+                            ),
+                          ],
+                        ),
+                        // Opcional: para que la tile sea un poco más compacta
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
                       );
                     },
                   ),
                 ),
+
+                // Botón para empezar partida
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: SizedBox(
