@@ -150,7 +150,7 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade700.withOpacity(0.3),
+                  color: Colors.blue.shade700.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.blue.shade700),
                 ),
@@ -198,7 +198,7 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
                             hintText: 'Escribe una palabra...',
                             prefixIcon: Icon(
                               Icons.text_fields,
-                              color: Colors.red.shade700.withOpacity(0.7),
+                              color: Colors.red.shade700.withValues(alpha: 0.7),
                             ),
                           ),
                           onSubmitted: (_) => _addWord(),
@@ -271,7 +271,7 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
                                 leading: Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.shade700.withOpacity(0.2),
+                                    color: Colors.blue.shade700.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(

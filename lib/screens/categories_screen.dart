@@ -59,8 +59,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: enabledCount > 0 
-                    ? Colors.green.shade700.withOpacity(0.3)
-                    : Colors.red.shade700.withOpacity(0.3),
+                    ? Colors.green.shade700.withValues(alpha: 0.3)
+                    : Colors.red.shade700.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: enabledCount > 0 ? Colors.green.shade700 : Colors.red.shade700,
@@ -110,58 +110,71 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
                             color: c.enabled 
-                              ? Colors.red.shade700.withOpacity(0.5)
+                              ? Colors.red.shade700.withValues(alpha: 0.5)
                               : Colors.transparent,
                             width: 2,
                           ),
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                            vertical: 8.0,
-                          ),
-                          leading: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: c.enabled 
-                                ? Colors.red.shade700.withOpacity(0.2)
-                                : Colors.grey.shade800.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              c.isCustom ? Icons.edit : Icons.category,
-                              color: c.enabled ? Colors.red.shade700 : Colors.grey,
-                            ),
-                          ),
-                          title: Row(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          child: Row(
                             children: [
+                              // Icono
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: c.enabled 
+                                    ? Colors.red.shade700.withValues(alpha: 0.2)
+                                    : Colors.grey.shade800.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  c.isCustom ? Icons.edit : Icons.category,
+                                  color: c.enabled ? Colors.red.shade700 : Colors.grey,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Nombre
                               Expanded(
                                 child: Text(
                                   c.name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                     color: c.enabled ? Colors.white : Colors.grey.shade600,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (c.isCustom)
+                              // Botón añadir (solo para personalizada)
+                              if (c.isCustom) ...[
                                 IconButton(
                                   icon: Icon(
                                     Icons.add_circle_outline,
                                     color: Colors.red.shade700,
+                                    size: 28,
                                   ),
                                   tooltip: 'Añadir palabras',
                                   onPressed: _openCustomWords,
                                 ),
+                                const SizedBox(width: 8),
+                              ],
+                              // Switch
                               Switch(
                                 value: c.enabled,
                                 onChanged: (val) => _toggleCategory(c, val),
-                                activeColor: Colors.red.shade700,
+                                thumbColor: WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return Colors.red.shade700;
+                                  }
+                                  return null;
+                                }),
+                                trackColor: WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return Colors.red.shade700.withValues(alpha: 0.5);
+                                  }
+                                  return null;
+                                }),
                               ),
                             ],
                           ),

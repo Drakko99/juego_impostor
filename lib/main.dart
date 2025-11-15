@@ -21,7 +21,6 @@ class ImpostorApp extends StatelessWidget {
           primary: Colors.red.shade700,
           secondary: Colors.red.shade400,
           surface: const Color(0xFF1A1A1A),
-          background: const Color(0xFF121212),
           error: Colors.red.shade300,
         ),
         scaffoldBackgroundColor: const Color(0xFF121212),

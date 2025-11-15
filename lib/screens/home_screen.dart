@@ -143,8 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             decoration: BoxDecoration(
                               color: _playerCount > 3 
-                                ? Colors.red.shade700.withOpacity(0.2)
-                                : Colors.grey.shade800.withOpacity(0.2),
+                                ? Colors.red.shade700.withValues(alpha: 0.2)
+                                : Colors.grey.shade800.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade700.withOpacity(0.2),
+                              color: Colors.red.shade700.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: Colors.red.shade700, width: 2),
                             ),
@@ -174,8 +174,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             decoration: BoxDecoration(
                               color: _playerCount < 12
-                                ? Colors.red.shade700.withOpacity(0.2)
-                                : Colors.grey.shade800.withOpacity(0.2),
+                                ? Colors.red.shade700.withValues(alpha: 0.2)
+                                : Colors.grey.shade800.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
@@ -226,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           labelText: 'Jugador ${index + 1}',
                           prefixIcon: Icon(
                             Icons.account_circle,
-                            color: Colors.red.shade700.withOpacity(0.7),
+                            color: Colors.red.shade700.withValues(alpha: 0.7),
                           ),
                           hintText: 'Nombre opcional',
                         ),
