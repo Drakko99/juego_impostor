@@ -6,9 +6,9 @@ import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
 
 class GameScreen extends StatefulWidget {
-  final int playerCount;
+  final List<String> playerNames;
 
-  const GameScreen({super.key, required this.playerCount});
+  const GameScreen({super.key, required this.playerNames});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -24,6 +24,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _loading = true;
   String? _error;
   int? _startingPlayerIndex;
+  int get _playerCount => widget.playerNames.length;
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _GameScreenState extends State<GameScreen> {
       return;
     }
 
-    final impostorIndex = _repo.getRandomImpostorIndex(widget.playerCount);
+    final impostorIndex = _repo.getRandomImpostorIndex(_playerCount);
 
     setState(() {
       _secretWord = word;
@@ -59,51 +60,45 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  /// Elige quién empieza con menos probabilidad para el impostor.
   int _chooseStartingPlayerIndex() {
-    // Por seguridad, si algo raro pasa, escogemos uniforme
     if (_impostorIndex == null) {
-      return Random().nextInt(widget.playerCount);
+      return Random().nextInt(_playerCount);
     }
 
-    const double impostorWeight = 0.25; // peso del impostor
-    const double normalWeight = 1.0;    // peso de cada inocente
+    const double impostorWeight = 0.25;
+    const double normalWeight = 1.0;
 
     final random = Random();
-
-    // Suma total de pesos
     final totalWeight =
-        impostorWeight + (widget.playerCount - 1) * normalWeight;
+        impostorWeight + (_playerCount - 1) * normalWeight;
 
     double r = random.nextDouble() * totalWeight;
     double acc = 0.0;
 
-    for (int i = 0; i < widget.playerCount; i++) {
+    for (int i = 0; i < _playerCount; i++) {
       final w = (i == _impostorIndex) ? impostorWeight : normalWeight;
       acc += w;
       if (r <= acc) {
         return i;
       }
     }
-
-    // No debería llegar aquí, pero por si acaso
     return 0;
   }
 
   void _nextPlayer() {
-    if (_currentPlayer < widget.playerCount - 1) {
-      // Todavía quedan jugadores por ver su rol/palabra
+    if (_currentPlayer < _playerCount - 1) {
       setState(() {
         _currentPlayer++;
         _revealed = false;
       });
     } else {
-      // Si todos han visto su rol elegimos quién empieza
       final startingIndex = _chooseStartingPlayerIndex();
 
       setState(() {
         _startingPlayerIndex = startingIndex;
       });
+
+      final starterName = widget.playerNames[startingIndex];
 
       showDialog(
         context: context,
@@ -111,13 +106,13 @@ class _GameScreenState extends State<GameScreen> {
           title: const Text('¡Listo!'),
           content: Text(
             'Todos los jugadores han visto su rol.\n\n'
-            'Empieza el jugador ${startingIndex + 1}.',
+            'Empieza: $starterName.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context)
-                ..pop() // cierra el diálogo
-                ..pop(), // vuelve a la pantalla anterior
+                ..pop()
+                ..pop(),
               child: const Text('OK'),
             ),
           ],
@@ -142,21 +137,22 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     final isImpostor = _currentPlayer == _impostorIndex;
+    final currentName = widget.playerNames[_currentPlayer];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Partida')),
-      body: Center( // Centra todo el contenido
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // usa solo el espacio necesario
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'Jugador ${_currentPlayer + 1}',
+                currentName,
                 style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center, // texto centrado
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               if (!_revealed)
@@ -176,7 +172,7 @@ class _GameScreenState extends State<GameScreen> {
                 FilledButton(
                   onPressed: _nextPlayer,
                   child: Text(
-                    _currentPlayer == widget.playerCount - 1
+                    _currentPlayer == _playerCount - 1
                         ? 'Terminar'
                         : 'Siguiente jugador',
                   ),
