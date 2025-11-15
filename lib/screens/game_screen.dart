@@ -1,7 +1,5 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-
 import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
 
@@ -14,7 +12,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   final GameRepository _repo = GameRepository();
 
   WordItem? _secretWord;
@@ -24,12 +22,36 @@ class _GameScreenState extends State<GameScreen> {
   bool _loading = true;
   String? _error;
   int? _startingPlayerIndex;
+  
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   int get _playerCount => widget.playerNames.length;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+    
     _startGame();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _startGame() async {
@@ -43,8 +65,7 @@ class _GameScreenState extends State<GameScreen> {
     if (word == null) {
       setState(() {
         _loading = false;
-        _error =
-            'No hay palabras disponibles. Activa categorías o añade palabras personalizadas.';
+        _error = 'No hay palabras disponibles. Activa categorías o añade palabras personalizadas.';
       });
       return;
     }
@@ -69,8 +90,7 @@ class _GameScreenState extends State<GameScreen> {
     const double normalWeight = 1.0;
 
     final random = Random();
-    final totalWeight =
-        impostorWeight + (_playerCount - 1) * normalWeight;
+    final totalWeight = impostorWeight + (_playerCount - 1) * normalWeight;
 
     double r = random.nextDouble() * totalWeight;
     double acc = 0.0;
@@ -102,18 +122,70 @@ class _GameScreenState extends State<GameScreen> {
 
       showDialog(
         context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withOpacity(0.95),
         builder: (_) => AlertDialog(
-          title: const Text('¡Listo!'),
-          content: Text(
-            'Todos los jugadores han visto su rol.\n\n'
-            'Empieza: $starterName.',
+          backgroundColor: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade700, size: 32),
+              const SizedBox(width: 12),
+              const Text('¡Listo para jugar!'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Todos los jugadores conocen su palabra.',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade700.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade700, width: 2),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.play_arrow, color: Colors.red.shade700, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Empieza:',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          Text(
+                            starterName,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context)
-                ..pop()
-                ..pop(),
-              child: const Text('OK'),
+            FilledButton(
+              onPressed: () => Navigator.of(context)..pop()..pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text('¡A jugar!'),
             ),
           ],
         ),
@@ -121,64 +193,246 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void _revealRole() {
+    setState(() => _revealed = true);
+    _animationController.forward(from: 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Preparando la partida...',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Partida')),
-        body: Center(child: Text(_error!)),
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 80, color: Colors.red.shade700),
+                const SizedBox(height: 24),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Volver'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
     final isImpostor = _currentPlayer == _impostorIndex;
     final currentName = widget.playerNames[_currentPlayer];
+    final progress = (_currentPlayer + 1) / _playerCount;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Partida')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                currentName,
-                style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              if (!_revealed)
-                FilledButton(
-                  onPressed: () {
-                    setState(() => _revealed = true);
-                  },
-                  child: const Text('Ver tu palabra / rol'),
-                )
-              else ...[
-                Text(
-                  isImpostor ? 'ERES EL IMPOSOR' : _secretWord!.text,
-                  style: Theme.of(context).textTheme.headlineLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _nextPlayer,
-                  child: Text(
-                    _currentPlayer == _playerCount - 1
-                        ? 'Terminar'
-                        : 'Siguiente jugador',
+      appBar: AppBar(
+        title: Text('Jugador ${_currentPlayer + 1} de $_playerCount'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey.shade800,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.red.shade700),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Avatar y nombre del jugador
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 80,
+                    color: Colors.red.shade700,
                   ),
                 ),
+                const SizedBox(height: 24),
+                Text(
+                  currentName,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 48),
+                
+                // Área de revelación
+                if (!_revealed) ...[
+                  Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.visibility_off,
+                            size: 60,
+                            color: Colors.grey.shade700,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Tu palabra está oculta',
+                            style: Theme.of(context).textTheme.titleLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pulsa el botón cuando estés listo',
+                            style: TextStyle(color: Colors.grey.shade600),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: FilledButton.icon(
+                      onPressed: _revealRole,
+                      icon: const Icon(Icons.visibility, size: 28),
+                      label: const Text(
+                        'VER MI PALABRA',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  // Palabra revelada con animación
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isImpostor
+                                ? [Colors.red.shade900, Colors.red.shade700]
+                                : [Colors.blue.shade900, Colors.blue.shade700],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isImpostor ? Colors.red : Colors.blue).withOpacity(0.5),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              isImpostor ? Icons.warning : Icons.check_circle,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 2,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (isImpostor) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                '¡No dejes que te descubran!',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white70,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: FilledButton.icon(
+                      onPressed: _nextPlayer,
+                      icon: Icon(
+                        _currentPlayer == _playerCount - 1
+                            ? Icons.check
+                            : Icons.arrow_forward,
+                        size: 28,
+                      ),
+                      label: Text(
+                        _currentPlayer == _playerCount - 1
+                            ? 'FINALIZAR'
+                            : 'SIGUIENTE JUGADOR',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
