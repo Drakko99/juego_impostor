@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../repositories/game_repository.dart';
@@ -21,6 +23,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _revealed = false;
   bool _loading = true;
   String? _error;
+  int? _startingPlayerIndex;
 
   @override
   void initState() {
@@ -56,26 +59,66 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  /// Elige quién empieza con menos probabilidad para el impostor.
+  int _chooseStartingPlayerIndex() {
+    // Por seguridad, si algo raro pasa, escogemos uniforme
+    if (_impostorIndex == null) {
+      return Random().nextInt(widget.playerCount);
+    }
+
+    const double impostorWeight = 0.25; // peso del impostor
+    const double normalWeight = 1.0;    // peso de cada inocente
+
+    final random = Random();
+
+    // Suma total de pesos
+    final totalWeight =
+        impostorWeight + (widget.playerCount - 1) * normalWeight;
+
+    double r = random.nextDouble() * totalWeight;
+    double acc = 0.0;
+
+    for (int i = 0; i < widget.playerCount; i++) {
+      final w = (i == _impostorIndex) ? impostorWeight : normalWeight;
+      acc += w;
+      if (r <= acc) {
+        return i;
+      }
+    }
+
+    // No debería llegar aquí, pero por si acaso
+    return 0;
+  }
+
   void _nextPlayer() {
     if (_currentPlayer < widget.playerCount - 1) {
+      // Todavía quedan jugadores por ver su rol/palabra
       setState(() {
         _currentPlayer++;
         _revealed = false;
       });
     } else {
-      // Todos han visto su rol
+      // Si todos han visto su rol elegimos quién empieza
+      final startingIndex = _chooseStartingPlayerIndex();
+
+      setState(() {
+        _startingPlayerIndex = startingIndex;
+      });
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('¡Listo!'),
-          content:
-              const Text('Todos los jugadores han visto su rol. ¡A jugar!'),
+          content: Text(
+            'Todos los jugadores han visto su rol.\n\n'
+            'Empieza el jugador ${startingIndex + 1}.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context)
-                ..pop()
-                ..pop(),
-              child: const Text('Volver'),
+                ..pop() // cierra el diálogo
+                ..pop(), // vuelve a la pantalla anterior
+              child: const Text('OK'),
             ),
           ],
         ),
@@ -102,40 +145,45 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Partida')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Jugador ${_currentPlayer + 1}',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 24),
-            if (!_revealed)
-              FilledButton(
-                onPressed: () {
-                  setState(() => _revealed = true);
-                },
-                child: const Text('Ver tu palabra / rol'),
-              )
-            else ...[
+      body: Center( // Centra todo el contenido
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // usa solo el espacio necesario
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
               Text(
-                isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text,
-                style: Theme.of(context).textTheme.headlineLarge,
-                textAlign: TextAlign.center,
+                'Jugador ${_currentPlayer + 1}',
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center, // texto centrado
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _nextPlayer,
-                child: Text(
-                  _currentPlayer == widget.playerCount - 1
-                      ? 'Terminar'
-                      : 'Siguiente jugador',
+              if (!_revealed)
+                FilledButton(
+                  onPressed: () {
+                    setState(() => _revealed = true);
+                  },
+                  child: const Text('Ver tu palabra / rol'),
+                )
+              else ...[
+                Text(
+                  isImpostor ? 'ERES EL IMPOSOR' : _secretWord!.text,
+                  style: Theme.of(context).textTheme.headlineLarge,
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: _nextPlayer,
+                  child: Text(
+                    _currentPlayer == widget.playerCount - 1
+                        ? 'Terminar'
+                        : 'Siguiente jugador',
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
