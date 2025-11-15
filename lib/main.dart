@@ -11,11 +11,16 @@ class ImpostorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final darkColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color.fromARGB(255, 35, 45, 136),
+      brightness: Brightness.dark,
+    );
+
     return MaterialApp(
       title: 'Juego del Impostor',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: darkColorScheme,
         useMaterial3: true,
       ),
       home: const HomeScreen(),
