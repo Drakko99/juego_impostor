@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -22,80 +25,68 @@ class AppDatabase {
       path,
       version: 1,
       onCreate: (db, version) async {
-        // Crear tabla de categorías
-        await db.execute('''
-          CREATE TABLE categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            enabled INTEGER NOT NULL DEFAULT 1,
-            is_custom INTEGER NOT NULL DEFAULT 0
-          );
-        ''');
-
-        // Crear tabla de palabras
-        await db.execute('''
-          CREATE TABLE words (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            text TEXT NOT NULL,
-            category_id INTEGER NOT NULL,
-            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-          );
-        ''');
-
-        // Insertar categorías iniciales
-        final comidaId = await db.insert('categories', {
-          'name': 'Comida',
-          'enabled': 1,
-          'is_custom': 0,
-        });
-
-        final animalesId = await db.insert('categories', {
-          'name': 'Animales',
-          'enabled': 1,
-          'is_custom': 0,
-        });
-
-        final peliculasId = await db.insert('categories', {
-          'name': 'Películas',
-          'enabled': 1,
-          'is_custom': 0,
-        });
-
-        final personalizadaId = await db.insert('categories', {
-          'name': 'Personalizada',
-          'enabled': 1,
-          'is_custom': 1,
-        });
-
-        // Palabras de ejemplo
-        await db.insert('words', {
-          'text': 'Pizza',
-          'category_id': comidaId,
-        });
-        await db.insert('words', {
-          'text': 'Hamburguesa',
-          'category_id': comidaId,
-        });
-        await db.insert('words', {
-          'text': 'Perro',
-          'category_id': animalesId,
-        });
-        await db.insert('words', {
-          'text': 'Gato',
-          'category_id': animalesId,
-        });
-        await db.insert('words', {
-          'text': 'Matrix',
-          'category_id': peliculasId,
-        });
-        await db.insert('words', {
-          'text': 'Titanic',
-          'category_id': peliculasId,
-        });
-
-        // Por ahora la categoría personalizada empieza vacía
-        personalizadaId; // solo para que no se queje el analizador
+        await _createTables(db);
+        await _seedInitialDataFromJson(db);
       },
     );
+  }
+
+  Future<void> _createTables(Database db) async {
+    // Tabla categorías
+    await db.execute('''
+      CREATE TABLE categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        is_custom INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
+
+    // Tabla palabras
+    await db.execute('''
+      CREATE TABLE words (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        text TEXT NOT NULL,
+        category_id INTEGER NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+      );
+    ''');
+  }
+
+  /// Lee assets/data/words.json y rellena categorías + palabras.
+  Future<void> _seedInitialDataFromJson(Database db) async {
+    // Leemos el archivo JSON
+    final jsonString = await rootBundle.loadString('assets/data/words.json');
+    final Map<String, dynamic> data = json.decode(jsonString);
+
+    final List<dynamic> categories = data['categories'] as List<dynamic>;
+
+    // Usamos una transacción para que sea más rápido y seguro
+    await db.transaction((txn) async {
+      for (final dynamic cat in categories) {
+        final Map<String, dynamic> catMap = cat as Map<String, dynamic>;
+        final String name = catMap['name'] as String;
+        final bool isCustom = catMap['is_custom'] as bool? ?? false;
+        final List<dynamic> words = catMap['words'] as List<dynamic>? ?? [];
+
+        // Insertamos categoría
+        final int categoryId = await txn.insert('categories', {
+          'name': name,
+          'enabled': 1,
+          'is_custom': isCustom ? 1 : 0,
+        });
+
+        // Insertamos palabras de esa categoría
+        for (final dynamic w in words) {
+          final String text = w.toString().trim();
+          if (text.isEmpty) continue;
+
+          await txn.insert('words', {
+            'text': text,
+            'category_id': categoryId,
+          });
+        }
+      }
+    });
   }
 }
