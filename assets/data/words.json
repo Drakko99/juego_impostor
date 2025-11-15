@@ -430,7 +430,8 @@
                 "Duende Verde",
                 "Capitana Marvel",
                 "Pantera Negra",
-                "Ant-Man"
+                "Ant-Man",
+                "Abogado"
             ]
         },
         {
@@ -524,6 +525,94 @@
                 "Relajación",
                 "Curiosidad",
                 "Timidez"
+            ]
+        },
+        {
+            "name": "Famosos",
+            "is_custom": false,
+            "words": [
+                "Taylor Swift",
+                "Messi",
+                "Cristiano Ronaldo",
+                "Shakira",
+                "Bad Bunny",
+                "Aitana",
+                "Karol G",
+                "Dua Lipa",
+                "The Rock",
+                "Leonardo DiCaprio",
+                "Scarlett Johansson",
+                "Tom Cruise",
+                "Zendaya",
+                "Ryan Reynolds",
+                "Emma Watson",
+                "Will Smith",
+                "Robert Downey Jr.",
+                "Keanu Reeves",
+                "Billie Eilish",
+                "Lady Gaga",
+                "Ed Sheeran",
+                "Rihanna",
+                "Selena Gomez",
+                "Kylie Jenner",
+                "Ariana Grande",
+                "ElRubiusOMG",
+                "Auronplay",
+                "Vegetta777"
+            ]
+        },
+        {
+            "name": "Streamers",
+            "is_custom": false,
+            "words": [
+                "Ibai",
+                "AuronPlay",
+                "ElRubiusOMG",
+                "TheGrefg",
+                "IlloJuan",
+                "ElXokas",
+                "Vegetta777",
+                "Willyrex",
+                "JuanSGuarnizo",
+                "ElMariana",
+                "Rivers",
+                "Spreen",
+                "Ninja",
+                "Pokimane",
+                "xQc",
+                "Luzu",
+                "Alexelcapo",
+                "Cristinini",
+                "Reven",
+                "Wismichu"
+            ]
+        },
+        {
+            "name": "Animes",
+            "is_custom": false,
+            "words": [
+                "Naruto",
+                "One Piece",
+                "Dragon Ball",
+                "Attack on Titan",
+                "Death Note",
+                "Fullmetal Alchemist",
+                "My Hero Academia",
+                "Jujutsu Kaisen",
+                "Demon Slayer",
+                "Tokyo Ghoul",
+                "Sword Art Online",
+                "Hunter x Hunter",
+                "Bleach",
+                "Haikyuu",
+                "Spy x Family",
+                "Chainsaw Man",
+                "One Punch Man",
+                "Fairy Tail",
+                "Black Clover",
+                "Mob Psycho 100",
+                "Code Geass",
+                "Your Name"
             ]
         },
         {
