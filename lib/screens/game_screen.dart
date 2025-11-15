@@ -16,6 +16,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   final GameRepository _repo = GameRepository();
 
   WordItem? _secretWord;
+  String? _categoryName;
   int? _impostorIndex;
   int _currentPlayer = 0;
   bool _revealed = false;
@@ -60,9 +61,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       _error = null;
     });
 
-    final word = await _repo.getRandomWordFromEnabledCategories();
+    final wordData = await _repo.getRandomWordWithCategoryFromEnabledCategories();
 
-    if (word == null) {
+    if (wordData == null) {
       setState(() {
         _loading = false;
         _error = 'No hay palabras disponibles. Activa categorías o añade palabras personalizadas.';
@@ -73,7 +74,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     final impostorIndex = _repo.getRandomImpostorIndex(_playerCount);
 
     setState(() {
-      _secretWord = word;
+      _secretWord = wordData['word'] as WordItem;
+      _categoryName = wordData['categoryName'] as String;
       _impostorIndex = impostorIndex;
       _currentPlayer = 0;
       _revealed = false;
@@ -123,7 +125,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       showDialog(
         context: context,
         barrierDismissible: false,
-        barrierColor: Colors.black.withOpacity(0.95),
+        barrierColor: Colors.black.withValues(alpha: 0.95),
         builder: (_) => AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -139,14 +141,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Todos los jugadores conocen su palabra.',
+                'Todos los jugadores conocen su rol.',
                 style: TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade700.withOpacity(0.2),
+                  color: Colors.red.shade700.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.red.shade700, width: 2),
                 ),
@@ -280,7 +282,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade700.withOpacity(0.1),
+                    color: Colors.red.shade700.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -336,7 +338,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                       onPressed: _revealRole,
                       icon: const Icon(Icons.visibility, size: 28),
                       label: const Text(
-                        'VER MI PALABRA',
+                        'VER MI ROL',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       style: FilledButton.styleFrom(
@@ -364,7 +366,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: (isImpostor ? Colors.red : Colors.blue).withOpacity(0.5),
+                              color: (isImpostor ? Colors.red : Colors.blue).withValues(alpha: 0.5),
                               blurRadius: 20,
                               spreadRadius: 5,
                             ),
@@ -378,6 +380,29 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                               color: Colors.white,
                             ),
                             const SizedBox(height: 16),
+                            if (!isImpostor && _categoryName != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  _categoryName!.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                             Text(
                               isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
                               style: const TextStyle(

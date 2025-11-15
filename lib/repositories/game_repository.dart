@@ -63,12 +63,12 @@ class GameRepository {
     await db.delete('words', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Palabra aleatoria de categorías activas
-  Future<WordItem?> getRandomWordFromEnabledCategories() async {
+  // Palabra aleatoria de categorías activas CON nombre de categoría
+  Future<Map<String, dynamic>?> getRandomWordWithCategoryFromEnabledCategories() async {
     final db = await _db;
 
     final result = await db.rawQuery('''
-      SELECT w.id, w.text, w.category_id
+      SELECT w.id, w.text, w.category_id, c.name as category_name
       FROM words w
       JOIN categories c ON c.id = w.category_id
       WHERE c.enabled = 1
@@ -77,7 +77,11 @@ class GameRepository {
     ''');
 
     if (result.isEmpty) return null;
-    return WordItem.fromMap(result.first);
+    
+    return {
+      'word': WordItem.fromMap(result.first),
+      'categoryName': result.first['category_name'] as String,
+    };
   }
 
   // Índice del impostor (entre 0 y playerCount - 1)
