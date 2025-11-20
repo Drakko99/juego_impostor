@@ -22,7 +22,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   bool _revealed = false;
   bool _loading = true;
   String? _error;
-  int? _startingPlayerIndex;
   
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -115,10 +114,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       });
     } else {
       final startingIndex = _chooseStartingPlayerIndex();
-
-      setState(() {
-        _startingPlayerIndex = startingIndex;
-      });
 
       final starterName = widget.playerNames[startingIndex];
 
