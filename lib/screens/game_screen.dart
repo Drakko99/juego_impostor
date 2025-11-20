@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
+import 'game_end_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   final List<String> playerNames;
@@ -114,77 +115,18 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       });
     } else {
       final startingIndex = _chooseStartingPlayerIndex();
-
       final starterName = widget.playerNames[startingIndex];
+      final impostorName = widget.playerNames[_impostorIndex!];
 
       showDialog(
         context: context,
         barrierDismissible: false,
         barrierColor: Colors.black.withValues(alpha: 0.95),
-        builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green.shade700, size: 32),
-              const SizedBox(width: 12),
-              const Text('¡Listo para jugar!'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Todos los jugadores conocen su rol.',
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade700.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.shade700, width: 2),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.play_arrow, color: Colors.red.shade700, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Empieza:',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          Text(
-                            starterName,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context)..pop()..pop(),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text('¡A jugar!'),
-            ),
-          ],
+        builder: (_) => GameEndDialog(
+          starterName: starterName,
+          secretWord: _secretWord!.text,
+          categoryName: _categoryName!,
+          impostorName: impostorName,
         ),
       );
     }
