@@ -4,14 +4,24 @@ import 'package:sqflite/sqflite.dart';
 import '../db/app_database.dart';
 import '../models/category.dart';
 import '../models/word_item.dart';
+import '../utils/preferences.dart';
 
 class GameRepository {
   Future<Database> get _db async => AppDatabase.instance.database;
 
-  // Obtener todas las categorías
+  // Obtener todas las categorías (filtradas según modo +18)
   Future<List<Category>> getCategories() async {
     final db = await _db;
-    final result = await db.query('categories', orderBy: 'id ASC');
+    final adultMode = await Preferences.getAdultMode();
+    
+    // Si el modo adulto está desactivado, excluimos las categorías +18
+    final String where = adultMode ? '' : 'is_adult = 0';
+    
+    final result = await db.query(
+      'categories',
+      where: where.isEmpty ? null : where,
+      orderBy: 'id ASC',
+    );
     return result.map((e) => Category.fromMap(e)).toList();
   }
 
@@ -64,14 +74,19 @@ class GameRepository {
   }
 
   // Palabra aleatoria de categorías activas CON nombre de categoría
+  // Filtra categorías +18 si el modo no está activado
   Future<Map<String, dynamic>?> getRandomWordWithCategoryFromEnabledCategories() async {
     final db = await _db;
+    final adultMode = await Preferences.getAdultMode();
+
+    // Construimos la query según el modo adulto
+    final String adultFilter = adultMode ? '' : 'AND c.is_adult = 0';
 
     final result = await db.rawQuery('''
       SELECT w.id, w.text, w.category_id, c.name as category_name
       FROM words w
       JOIN categories c ON c.id = w.category_id
-      WHERE c.enabled = 1
+      WHERE c.enabled = 1 $adultFilter
       ORDER BY RANDOM()
       LIMIT 1;
     ''');

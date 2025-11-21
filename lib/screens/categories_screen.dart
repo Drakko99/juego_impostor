@@ -129,21 +129,49 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
-                                  c.isCustom ? Icons.edit : Icons.category,
+                                  c.isCustom ? Icons.edit : (c.isAdult ? Icons.explicit : Icons.category),
                                   color: c.enabled ? Colors.red.shade700 : Colors.grey,
                                   size: 24,
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              // Nombre
+                              // Nombre y badge +18
                               Expanded(
-                                child: Text(
-                                  c.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: c.enabled ? Colors.white : Colors.grey.shade600,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      c.name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: c.enabled ? Colors.white : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    if (c.isAdult) ...[
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.shade700.withValues(alpha: 0.3),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: Colors.orange.shade700,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '+18',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange.shade300,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                               // Botón añadir (solo para personalizada)

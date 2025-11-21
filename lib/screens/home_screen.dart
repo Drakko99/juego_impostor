@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../repositories/game_repository.dart';
 import 'game_screen.dart';
 import 'categories_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -63,6 +64,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
+  }
+
   Future<void> _startGame() async {
     final categories = await _repo.getCategories();
     final hasEnabled = categories.any((c) => c.enabled);
@@ -111,6 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text('Juego del Impostor'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _openSettings,
+            tooltip: 'Ajustes',
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(

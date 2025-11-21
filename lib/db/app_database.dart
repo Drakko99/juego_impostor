@@ -23,10 +23,16 @@ class AppDatabase {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2, // Incrementamos la versión
       onCreate: (db, version) async {
         await _createTables(db);
         await _seedInitialDataFromJson(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Añadir columna is_adult a la tabla existente
+          await db.execute('ALTER TABLE categories ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0');
+        }
       },
     );
   }
@@ -38,7 +44,8 @@ class AppDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         enabled INTEGER NOT NULL DEFAULT 1,
-        is_custom INTEGER NOT NULL DEFAULT 0
+        is_custom INTEGER NOT NULL DEFAULT 0,
+        is_adult INTEGER NOT NULL DEFAULT 0
       );
     ''');
 
@@ -67,13 +74,15 @@ class AppDatabase {
         final Map<String, dynamic> catMap = cat as Map<String, dynamic>;
         final String name = catMap['name'] as String;
         final bool isCustom = catMap['is_custom'] as bool? ?? false;
+        final bool isAdult = catMap['is_adult'] as bool? ?? false;
         final List<dynamic> words = catMap['words'] as List<dynamic>? ?? [];
 
         // Insertamos categoría
         final int categoryId = await txn.insert('categories', {
           'name': name,
-          'enabled': 1,
+          'enabled': isAdult ? 0 : 1, // Las categorías +18 se crean desactivadas
           'is_custom': isCustom ? 1 : 0,
+          'is_adult': isAdult ? 1 : 0,
         });
 
         // Insertamos palabras de esa categoría

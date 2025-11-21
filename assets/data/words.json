@@ -3,6 +3,7 @@
         {
             "name": "Comida",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Pizza",
                 "Hamburguesa",
@@ -34,6 +35,7 @@
         {
             "name": "Bebidas",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Agua",
                 "Refresco de cola",
@@ -64,6 +66,7 @@
         {
             "name": "Animales",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Perro",
                 "Gato",
@@ -95,6 +98,7 @@
         {
             "name": "Profesiones",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Médico",
                 "Enfermero",
@@ -126,6 +130,7 @@
         {
             "name": "Objetos de casa",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Sofá",
                 "Mesa",
@@ -157,6 +162,7 @@
         {
             "name": "Deportes",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Fútbol",
                 "Baloncesto",
@@ -188,6 +194,7 @@
         {
             "name": "Películas",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Titanic",
                 "Avatar",
@@ -219,6 +226,7 @@
         {
             "name": "Series de TV",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Breaking Bad",
                 "Juego de Tronos",
@@ -250,6 +258,7 @@
         {
             "name": "Videojuegos",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Minecraft",
                 "Fortnite",
@@ -281,6 +290,7 @@
         {
             "name": "Lugares de la ciudad",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Supermercado",
                 "Hospital",
@@ -312,6 +322,7 @@
         {
             "name": "Países",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "España",
                 "Francia",
@@ -343,6 +354,7 @@
         {
             "name": "Medios de transporte",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Coche",
                 "Moto",
@@ -374,6 +386,7 @@
         {
             "name": "Frutas y verduras",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Manzana",
                 "Plátano",
@@ -405,6 +418,7 @@
         {
             "name": "Superhéroes y villanos",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Superman",
                 "Batman",
@@ -437,6 +451,7 @@
         {
             "name": "Instrumentos musicales",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Guitarra",
                 "Piano",
@@ -468,6 +483,7 @@
         {
             "name": "Tecnología",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Móvil",
                 "Tablet",
@@ -499,6 +515,7 @@
         {
             "name": "Emociones y estados",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Felicidad",
                 "Tristeza",
@@ -530,6 +547,7 @@
         {
             "name": "Famosos",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Taylor Swift",
                 "Messi",
@@ -564,6 +582,7 @@
         {
             "name": "Streamers",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Ibai",
                 "AuronPlay",
@@ -590,6 +609,7 @@
         {
             "name": "Animes",
             "is_custom": false,
+            "is_adult": false,
             "words": [
                 "Naruto",
                 "One Piece",
@@ -618,7 +638,95 @@
         {
             "name": "Personalizada",
             "is_custom": true,
+            "is_adult": false,
             "words": []
+        },
+        {
+            "name": "Sexo",
+            "is_custom": false,
+            "is_adult": true,
+            "words": [
+                "Condón",
+                "Viagra",
+                "Kamasutra",
+                "Orgasmo",
+                "Masturbación",
+                "Preservativo",
+                "Anticonceptivo",
+                "Lubricante",
+                "Fetiche",
+                "Stripper",
+                "Porno",
+                "Seducción",
+                "Afrodisíaco",
+                "Juguete sexual",
+                "Onlyfans",
+                "Violación",
+                "Pene",
+                "Polla",
+                "Vagina",
+                "Chocho",
+                "Coño",
+                "Teta",
+                "Pezón",
+                "Por Detras",
+                "Por delante",
+                "En la cara",
+                "Correrse",
+                "Dedos",
+                "Orgía",
+                "Pornhub",
+                "Mamada",
+                "Lefa",
+                "A 4",
+                "Cowboy",
+                "Misionero",
+                "Trio",
+                "Voyeur" 
+            ]
+        },
+        {
+            "name": "Insultos",
+            "is_custom": false,
+            "is_adult": true,
+            "words": [
+                "Imbécil",
+                "Idiota",
+                "Estúpido",
+                "Gilipollas",
+                "Capullo",
+                "Tonto",
+                "Inútil",
+                "Payaso",
+                "Sinvergüenza",
+                "Caradura",
+                "Facha",
+                "Negro",
+                "Inmigrante",
+                "Sin Papeles",
+                "Moro",
+                "Frances",
+                "Peina Muñecas",
+                "Calvo",
+                "Pambisito",
+                "Fifas",
+                "Panchito",
+                "Retrasado",
+                "Mononeuronal",
+                "Fugitivo de la Evolución Humana",
+                "Mandril",
+                "Puto/a",
+                "Analfabeto",
+                "Gordo/a",
+                "Ballena",
+                "Cuatro ojos",
+                "Maricón",
+                "Feo",
+                "Meapilas",
+                "Esclavo",
+                "Pichacorta",
+                "Pagafantas"
+            ]
         }
     ]
 }
