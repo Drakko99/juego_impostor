@@ -282,9 +282,9 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
         FilledButton.icon(
           onPressed: () => Navigator.of(context)..pop()..pop(),
           icon: const Icon(Icons.check),
-          label: const Text('¡A jugar!'),
+          label: const Text('Terminar Ronda'),
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
+            backgroundColor: Colors.red.shade700,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
         ),
