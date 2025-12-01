@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Importar anuncios
 import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
+import '../utils/ad_helper.dart'; // Importar helper
 import 'game_end_dialog.dart';
 
 class GameScreen extends StatefulWidget {
@@ -28,6 +30,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
+  // Variables para el anuncio
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
   int get _playerCount => widget.playerNames.length;
 
   @override
@@ -47,10 +53,30 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
     
     _startGame();
+    _loadAd(); // Cargar anuncio
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.gameBannerId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
   }
 
   @override
   void dispose() {
+    _bannerAd?.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -209,193 +235,207 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         ),
       ),
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Avatar y nombre del jugador
-                Container(
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade700.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 80,
-                    color: Colors.red.shade700,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  currentName,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-                
-                // Área de revelación
-                if (!_revealed) ...[
-                  Card(
-                    elevation: 8,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.visibility_off,
-                            size: 60,
-                            color: Colors.grey.shade700,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Tu palabra está oculta',
-                            style: Theme.of(context).textTheme.titleLarge,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Pulsa el botón cuando estés listo',
-                            style: TextStyle(color: Colors.grey.shade600),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: FilledButton.icon(
-                      onPressed: _revealRole,
-                      icon: const Icon(Icons.visibility, size: 28),
-                      label: const Text(
-                        'VER MI ROL',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ] else ...[
-                  // Palabra revelada con animación
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Avatar y nombre del jugador
+                      Container(
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: isImpostor
-                                ? [Colors.red.shade900, Colors.red.shade700]
-                                : [Colors.blue.shade900, Colors.blue.shade700],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isImpostor ? Colors.red : Colors.blue).withValues(alpha: 0.5),
-                              blurRadius: 20,
-                              spreadRadius: 5,
-                            ),
-                          ],
+                          color: Colors.red.shade700.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              isImpostor ? Icons.warning : Icons.check_circle,
-                              size: 60,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(height: 16),
-                            if (!isImpostor && _categoryName != null) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.5),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  _categoryName!.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                            ],
-                            Text(
-                              isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 2,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if (isImpostor) ...[
-                              const SizedBox(height: 12),
-                              const Text(
-                                '¡No dejes que te descubran!',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white70,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ],
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: Colors.red.shade700,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: FilledButton.icon(
-                      onPressed: _nextPlayer,
-                      icon: Icon(
-                        _currentPlayer == _playerCount - 1
-                            ? Icons.check
-                            : Icons.arrow_forward,
-                        size: 28,
-                      ),
-                      label: Text(
-                        _currentPlayer == _playerCount - 1
-                            ? 'FINALIZAR'
-                            : 'SIGUIENTE JUGADOR',
-                        style: const TextStyle(
-                          fontSize: 18,
+                      const SizedBox(height: 24),
+                      Text(
+                        currentName,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                      ),
-                    ),
+                      const SizedBox(height: 48),
+                      
+                      // Área de revelación
+                      if (!_revealed) ...[
+                        Card(
+                          elevation: 8,
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.visibility_off,
+                                  size: 60,
+                                  color: Colors.grey.shade700,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Tu palabra está oculta',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Pulsa el botón cuando estés listo',
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: FilledButton.icon(
+                            onPressed: _revealRole,
+                            icon: const Icon(Icons.visibility, size: 28),
+                            label: const Text(
+                              'VER MI ROL',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        // Palabra revelada con animación
+                        ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isImpostor
+                                      ? [Colors.red.shade900, Colors.red.shade700]
+                                      : [Colors.blue.shade900, Colors.blue.shade700],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isImpostor ? Colors.red : Colors.blue).withValues(alpha: 0.5),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    isImpostor ? Icons.warning : Icons.check_circle,
+                                    size: 60,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  if (!isImpostor && _categoryName != null) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.25),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _categoryName!.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                  Text(
+                                    isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 2,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (isImpostor) ...[
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      '¡No dejes que te descubran!',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: FilledButton.icon(
+                            onPressed: _nextPlayer,
+                            icon: Icon(
+                              _currentPlayer == _playerCount - 1
+                                  ? Icons.check
+                                  : Icons.arrow_forward,
+                              size: 28,
+                            ),
+                            label: Text(
+                              _currentPlayer == _playerCount - 1
+                                  ? 'FINALIZAR'
+                                  : 'SIGUIENTE JUGADOR',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
+            // --- ANUNCIO BANNER AL FINAL DE LA PANTALLA ---
+            if (_bannerAd != null && _isAdLoaded)
+              Container(
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+          ],
         ),
       ),
     );

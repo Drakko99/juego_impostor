@@ -3,6 +3,13 @@
         android:label="El Impostor"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+
+        <!-- Anuncios -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-7978561314341617~4211816555"
+        />
+        <!-- - -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

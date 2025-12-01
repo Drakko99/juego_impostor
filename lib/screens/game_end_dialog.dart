@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Importar
+import '../utils/ad_helper.dart'; // Importar Helper
 
 /// Diálogo final que muestra quién empieza y permite revelar información
 class GameEndDialog extends StatefulWidget {
@@ -28,6 +30,10 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
   late Animation<double> _wordScaleAnim;
   late Animation<double> _impostorScaleAnim;
 
+  // Variables del Anuncio
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,10 +55,31 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
     _impostorScaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _impostorAnimController, curve: Curves.elasticOut),
     );
+
+    _loadAd(); // Cargar anuncio
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.dialogBannerId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
   }
 
   @override
   void dispose() {
+    _bannerAd?.dispose(); // Limpiar anuncio
     _wordAnimController.dispose();
     _impostorAnimController.dispose();
     super.dispose();
@@ -275,6 +302,16 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
                 ),
               ),
             ],
+
+            const SizedBox(height: 20),
+            // --- ANUNCIO EN EL DIÁLOGO ---
+            if (_bannerAd != null && _isAdLoaded)
+              Container(
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
           ],
         ),
       ),
