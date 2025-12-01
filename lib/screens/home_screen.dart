@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     debugPrint('Partidas jugadas: $gamesPlayed');
 
     // Si es múltiplo de 3 (3, 6, 9...) mostramos anuncio
-    if (gamesPlayed % 3 == 0) {
+    if (gamesPlayed % 2 == 0) {
       if (_interstitialAd != null) {
         _interstitialAd!.show();
         // Nota: _interstitialAd se pone a null o se recarga en el callback definido en _loadInterstitial
