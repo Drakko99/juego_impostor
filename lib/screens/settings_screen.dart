@@ -28,7 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() {
         _adultMode = adultMode;
-        _version = '${packageInfo.version}';
+        _version = packageInfo.version;
         _loading = false;
       });
     }
