@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../utils/preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _adultMode = false;
   bool _loading = true;
+  String _version = '';
 
   @override
   void initState() {
@@ -19,11 +21,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    // Cargamos la preferencia y la info de la app
     final adultMode = await Preferences.getAdultMode();
-    setState(() {
-      _adultMode = adultMode;
-      _loading = false;
-    });
+    final packageInfo = await PackageInfo.fromPlatform();
+
+    if (mounted) {
+      setState(() {
+        _adultMode = adultMode;
+        _version = '${packageInfo.version}';
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _toggleAdultMode(bool value) async {
@@ -165,8 +173,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Text(
                               'Contenido',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           ],
                         ),
@@ -263,8 +271,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Text(
                               'Acerca de',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           ],
                         ),
@@ -272,12 +280,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           'Juego del Impostor',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Versión 2.0.0',
+                          'Versión $_version',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
