@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "263205331372",
+    "project_id": "juego-impostor-drakko99",
+    "storage_bucket": "juego-impostor-drakko99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263205331372:android:07dc6f76d15a08c3f19a09",
+        "android_client_info": {
+          "package_name": "com.drakko99.juego_impostor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC557yaGE-PKqp9c1PGybRzNvQtxIzua1s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "admob_app_id": "ca-app-pub-7978561314341617~4211816555"
+    }
+  ],
+  "configuration_version": "1"
+}
