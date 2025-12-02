@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // IMPORTAR ADMOB
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../repositories/game_repository.dart';
-import '../utils/ad_helper.dart'; // Helper de Anuncios
-import '../utils/preferences.dart'; // Helper de Preferencias
+import '../utils/ad_helper.dart';
+import '../utils/preferences.dart';
 import 'game_screen.dart';
 import 'categories_screen.dart';
 import 'settings_screen.dart';
@@ -61,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
-          // Configuramos qué pasa cuando se cierra el anuncio
           _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
@@ -145,11 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final int gamesPlayed = await Preferences.incrementGamesPlayed();
     debugPrint('Partidas jugadas: $gamesPlayed');
 
-    // Si es múltiplo de 3 (3, 6, 9...) mostramos anuncio
+    // Si es múltiplo de 2 mostramos anuncio
     if (gamesPlayed % 2 == 0) {
       if (_interstitialAd != null) {
         _interstitialAd!.show();
-        // Nota: _interstitialAd se pone a null o se recarga en el callback definido en _loadInterstitial
       } else {
         debugPrint('Tocaría anuncio, pero aún no ha cargado.');
         // Intentamos cargar uno por si acaso para la próxima
@@ -197,6 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // DETECCIÓN DE TECLADO
+    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -220,24 +221,27 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Card para selector de jugadores
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
                             Row(
                               children: [
                                 Icon(Icons.groups, color: Colors.red.shade700, size: 28),
                                 const SizedBox(width: 12),
-                                Text(
-                                  'Número de jugadores',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Text(
+                                    'Número de jugadores',
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                 ),
                               ],
@@ -305,7 +309,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Título de nombres
                     Row(
                       children: [
                         Icon(Icons.person, color: Colors.red.shade700, size: 24),
@@ -319,13 +322,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    // Lista de jugadores
                     Expanded(
+                      key: const ValueKey('lista_jugadores'), 
                       child: ListView.builder(
+                        physics: const ClampingScrollPhysics(), 
+                        padding: const EdgeInsets.only(bottom: 80),
                         itemCount: _playerCount,
                         itemBuilder: (context, index) {
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
+                            padding: const EdgeInsets.only(bottom: 8.0),
                             child: TextField(
                               controller: _nameControllers[index],
                               decoration: InputDecoration(
@@ -335,52 +340,56 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.red.shade700.withValues(alpha: 0.7),
                                 ),
                                 hintText: 'Nombre opcional',
+                                
                               ),
                             ),
                           );
                         },
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Botones
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          height: 56,
-                          child: FilledButton.icon(
-                            onPressed: _startGame,
-                            icon: const Icon(Icons.play_arrow, size: 24),
-                            label: const Text(
-                              'Comenzar Partida',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: OutlinedButton.icon(
-                            onPressed: _openCategories,
-                            icon: const Icon(Icons.category, size: 24),
-                            label: const Text(
-                              'Categorías',
-                              style: TextStyle(fontSize: 16),
+
+                    // Si el teclado esta cerrado mostramos botones de acción
+                    if (!isKeyboardOpen) ...[
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            height: 56,
+                            child: FilledButton.icon(
+                              onPressed: _startGame,
+                              icon: const Icon(Icons.play_arrow, size: 24),
+                              label: const Text(
+                                'Comenzar Partida',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.red.shade700,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 56,
+                            child: OutlinedButton.icon(
+                              onPressed: _openCategories,
+                              icon: const Icon(Icons.category, size: 24),
+                              label: const Text(
+                                'Categorías',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
             
-            // --- BANNER DEL HOME ---
-            if (_bannerAd != null && _isBannerLoaded)
+            // --- BANNER DEL HOME (Solo visible si el teclado está cerrado) ---
+            if (_bannerAd != null && _isBannerLoaded && !isKeyboardOpen)
               Container(
                 alignment: Alignment.center,
                 width: _bannerAd!.size.width.toDouble(),

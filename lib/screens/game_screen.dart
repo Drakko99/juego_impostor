@@ -1,9 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // Importar anuncios
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
-import '../utils/ad_helper.dart'; // Importar helper
+import '../utils/ad_helper.dart';
 import 'game_end_dialog.dart';
 
 class GameScreen extends StatefulWidget {
@@ -253,7 +253,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                         ),
                         child: Icon(
                           Icons.person,
-                          size: 80,
+                          size: 60,
                           color: Colors.red.shade700,
                         ),
                       ),
@@ -313,14 +313,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                           ),
                         ),
                       ] else ...[
-                        // Palabra revelada con animación
+                        // Palabra revelada
                         ScaleTransition(
                           scale: _scaleAnimation,
                           child: FadeTransition(
                             opacity: _fadeAnimation,
                             child: Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.all(32),
+                              padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: isImpostor
