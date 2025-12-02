@@ -28,7 +28,7 @@
                 "Huevos revueltos",
                 "San Jacobo",
                 "Albóndigas",
-                "Fish and chips",
+                "Burguer de 1€",
                 "Wrap de pollo"
             ]
         },
@@ -55,12 +55,13 @@
                 "Bebida energética",
                 "Zumo de piña",
                 "Zumo de manzana",
-                "Smoothie de frutas",
+                "Buble tea",
                 "Sidra",
                 "Horchata",
                 "Agua con gas",
                 "Granizado",
-                "Agua de coco"
+                "Monster",
+                "Red Bull"
             ]
         },
         {
@@ -92,6 +93,12 @@
                 "Lobo",
                 "Mono",
                 "Canguro",
+                "Cucaracha",
+                "Rata",
+                "Serpiente",
+                "Cocodrilo",
+                "Camaleón",
+                "Tortuga",
                 "Erizo"
             ]
         },
@@ -188,6 +195,7 @@
                 "Remo",
                 "Escalada",
                 "Halterofilia",
+                "E-sport",
                 "Yoga"
             ]
         },
@@ -244,7 +252,7 @@
                 "Dark",
                 "The Office",
                 "Peaky Blinders",
-                "Merlina",
+                "Miercoles",
                 "Élite",
                 "Black Mirror",
                 "Better Call Saul",
@@ -377,7 +385,6 @@
                 "Teleférico",
                 "Velero",
                 "Lancha",
-                "Segway",
                 "Patines",
                 "Scooter",
                 "Tren de alta velocidad"
@@ -572,7 +579,6 @@
                 "Ed Sheeran",
                 "Rihanna",
                 "Selena Gomez",
-                "Kylie Jenner",
                 "Ariana Grande",
                 "ElRubiusOMG",
                 "Auronplay",
@@ -682,6 +688,7 @@
                 "Cowboy",
                 "Misionero",
                 "Trio",
+                "Puticlub",
                 "Voyeur" 
             ]
         },
@@ -725,7 +732,9 @@
                 "Meapilas",
                 "Esclavo",
                 "Pichacorta",
-                "Pagafantas"
+                "Morolandia",
+                "Pagafantas",
+                "El Dueño del Movil"
             ]
         }
     ]
