@@ -313,7 +313,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                           ),
                         ),
                       ] else ...[
-                        // Palabra revelada
+                        //Tarjeta de revelación con estilo oscuro (anti-reflejos)
                         ScaleTransition(
                           scale: _scaleAnimation,
                           child: FadeTransition(
@@ -322,19 +322,17 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isImpostor
-                                      ? [Colors.red.shade900, Colors.red.shade700]
-                                      : [Colors.blue.shade900, Colors.blue.shade700],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                                color: const Color(0xFF1E1E1E),
+                                border: Border.all(
+                                  color: isImpostor ? Colors.red.shade800 : Colors.blue.shade800,
+                                  width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isImpostor ? Colors.red : Colors.blue).withValues(alpha: 0.5),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -343,17 +341,17 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                                   Icon(
                                     isImpostor ? Icons.warning : Icons.check_circle,
                                     size: 60,
-                                    color: Colors.white,
+                                    color: isImpostor ? Colors.red.shade700 : Colors.blue.shade700,
                                   ),
                                   const SizedBox(height: 16),
                                   if (!isImpostor && _categoryName != null) ...[
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.25),
+                                        color: Colors.white.withValues(alpha: 0.05),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.5),
+                                          color: Colors.white.withValues(alpha: 0.1),
                                           width: 1,
                                         ),
                                       ),
@@ -362,7 +360,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                                         style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: Colors.grey,
                                           letterSpacing: 2,
                                         ),
                                       ),
@@ -371,10 +369,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                                   ],
                                   Text(
                                     isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: isImpostor ? Colors.red.shade400 : Colors.blue.shade400,
                                       letterSpacing: 2,
                                     ),
                                     textAlign: TextAlign.center,
@@ -385,7 +383,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                                       '¡No dejes que te descubran!',
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.white70,
+                                        color: Colors.grey,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
