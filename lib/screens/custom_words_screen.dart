@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../db/app_database.dart';
 import '../repositories/game_repository.dart';
 import '../models/word_item.dart';
+import '../utils/ad_helper.dart';
 
 class CustomWordsScreen extends StatefulWidget {
   const CustomWordsScreen({super.key});
@@ -18,15 +20,39 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
   List<WordItem> _words = [];
   bool _loading = true;
 
+  // Variables para el anuncio
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _loadCustomWords();
+    _loadAd();
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.customWordsBannerId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -140,6 +166,9 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Detectamos si el teclado está abierto para ocultar el banner y dar espacio
+    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Palabras personalizadas'),
@@ -298,6 +327,16 @@ class _CustomWordsScreenState extends State<CustomWordsScreen> {
                         },
                       ),
           ),
+          // --- BANNER (Oculto si el teclado está visible) ---
+          if (_bannerAd != null && _isAdLoaded && !isKeyboardOpen)
+            SafeArea(
+              child: Container(
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            ),
         ],
       ),
     );

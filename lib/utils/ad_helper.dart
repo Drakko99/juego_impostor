@@ -9,9 +9,13 @@ class AdHelper {
   static const String _iosTestInterstitialId = 'ca-app-pub-3940256099942544/4411468910';
 
   // --- IDs REALES (Para producción) ---
-  static const String _androidHomeRealId = 'ca-app-pub-7978561314341617/5696396411'; // El de tu foto
+  static const String _androidHomeRealId = 'ca-app-pub-7978561314341617/5696396411';
   static const String _androidGameRealId = 'ca-app-pub-7978561314341617/5614304231';
   static const String _androidDialogRealId = 'ca-app-pub-7978561314341617/1305741175';
+  static const String _androidCategoriesRealId = 'ca-app-pub-7978561314341617/1305741175';
+  static const String _androidWordsRealId = 'ca-app-pub-7978561314341617/1305741175';
+  static const String _androidSettingsRealId = 'ca-app-pub-7978561314341617/1305741175';
+
   static const String _androidRealInterstitialId = 'ca-app-pub-7978561314341617/3479095481';
 
   // 1. BANNER DEL HOME
@@ -44,7 +48,37 @@ class AdHelper {
     throw UnsupportedError('Plataforma no soportada');
   }
 
-  // 4. INTERSTICIAL (PANTALLA COMPLETA)
+  // 4. BANNER DE CATEGORÍAS
+  static String get categoriesBannerId {
+    if (Platform.isAndroid) {
+      return _androidTestId; // Cambiar a _androidCategoriesRealId para publicar
+    } else if (Platform.isIOS) {
+      return _iosTestId;
+    }
+    throw UnsupportedError('Plataforma no soportada');
+  }
+
+  // 5. BANNER DE PALABRAS PERSONALIZADAS
+  static String get customWordsBannerId {
+    if (Platform.isAndroid) {
+      return _androidTestId; // Cambiar a _androidWordsRealId para publicar
+    } else if (Platform.isIOS) {
+      return _iosTestId;
+    }
+    throw UnsupportedError('Plataforma no soportada');
+  }
+
+  // 6. BANNER DE AJUSTES
+  static String get settingsBannerId {
+    if (Platform.isAndroid) {
+      return _androidTestId; // Cambiar a _androidSettingsRealId para publicar
+    } else if (Platform.isIOS) {
+      return _iosTestId;
+    }
+    throw UnsupportedError('Plataforma no soportada');
+  }
+
+  // 7. INTERSTICIAL (PANTALLA COMPLETA)
   static String get interstitialAdId {
     if (Platform.isAndroid) {
       return _androidTestInterstitialId; // Cambiar por _androidRealInterstitialId al publicar

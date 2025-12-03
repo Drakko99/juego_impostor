@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../utils/preferences.dart';
+import '../utils/ad_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,10 +16,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
   String _version = '';
 
+  // Variables para el anuncio
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadAd();
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.settingsBannerId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -155,148 +186,164 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Ajustes'),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.explicit, color: Colors.orange.shade700, size: 28),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Contenido',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  const Text(
-                                    'Modo +18',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
+                                  Icon(Icons.explicit, color: Colors.orange.shade700, size: 28),
+                                  const SizedBox(width: 12),
                                   Text(
-                                    'Desbloquea categorías para adultos',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade600,
-                                    ),
+                                    'Contenido',
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
                                 ],
                               ),
-                            ),
-                            Switch(
-                              value: _adultMode,
-                              onChanged: _toggleAdultMode,
-                              thumbColor: WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return Colors.orange.shade700;
-                                }
-                                return null;
-                              }),
-                              trackColor: WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return Colors.orange.shade700.withValues(alpha: 0.5);
-                                }
-                                return null;
-                              }),
-                            ),
-                          ],
-                        ),
-                        if (_adultMode) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade700.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.orange.shade700.withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  color: Colors.orange.shade700,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Las categorías +18 están desactivadas por defecto. Actívalas desde el menú de categorías.',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.orange.shade300,
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Modo +18',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Desbloquea categorías para adultos',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                  Switch(
+                                    value: _adultMode,
+                                    onChanged: _toggleAdultMode,
+                                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                                      if (states.contains(WidgetState.selected)) {
+                                        return Colors.orange.shade700;
+                                      }
+                                      return null;
+                                    }),
+                                    trackColor: WidgetStateProperty.resolveWith((states) {
+                                      if (states.contains(WidgetState.selected)) {
+                                        return Colors.orange.shade700.withValues(alpha: 0.5);
+                                      }
+                                      return null;
+                                    }),
+                                  ),
+                                ],
+                              ),
+                              if (_adultMode) ...[
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade700.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.orange.shade700.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.orange.shade700,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Las categorías +18 están desactivadas por defecto. Actívalas desde el menú de categorías.',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.orange.shade300,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline, color: Colors.blue.shade700, size: 28),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Acerca de',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 28),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Acerca de',
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Juego del Impostor',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                ],
                               ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Versión $_version',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
+                              const SizedBox(height: 16),
+                              Text(
+                                'Juego del Impostor',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Versión $_version',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+          ),
+          // --- BANNER ---
+          if (_bannerAd != null && _isAdLoaded)
+            SafeArea(
+              child: Container(
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
             ),
+        ],
+      ),
     );
   }
 }
