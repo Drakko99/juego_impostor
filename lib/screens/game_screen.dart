@@ -30,7 +30,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
-  // Variables para el anuncio
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
 
@@ -53,7 +52,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
     
     _startGame();
-    _loadAd(); // Cargar anuncio
+    _loadAd();
   }
 
   void _loadAd() {
@@ -113,16 +112,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (_impostorIndex == null) {
       return Random().nextInt(_playerCount);
     }
-
     const double impostorWeight = 0.25;
     const double normalWeight = 1.0;
-
     final random = Random();
     final totalWeight = impostorWeight + (_playerCount - 1) * normalWeight;
-
     double r = random.nextDouble() * totalWeight;
     double acc = 0.0;
-
     for (int i = 0; i < _playerCount; i++) {
       final w = (i == _impostorIndex) ? impostorWeight : normalWeight;
       acc += w;
@@ -163,64 +158,291 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _animationController.forward(from: 0);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFF121212),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Preparando la partida...',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-              ),
-            ],
+  // --- WIDGETS ---
+
+  Widget _buildPlayerInfo(String currentName, {bool compact = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: EdgeInsets.all(compact ? 16 : 24),
+          decoration: BoxDecoration(
+            color: Colors.red.shade700.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.person,
+            size: compact ? 40 : 60,
+            color: Colors.red.shade700,
           ),
         ),
-      );
-    }
+        SizedBox(height: compact ? 12 : 24),
+        Text(
+          currentName,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: compact ? 24 : null,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
 
-    if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: Center(
+  Widget _buildHiddenState({bool compact = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Card(
+          elevation: 8,
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(compact ? 16 : 24),
+            child: Column(
+              children: [
+                Icon(Icons.visibility_off, size: compact ? 40 : 60, color: Colors.grey.shade700),
+                const SizedBox(height: 12),
+                Text(
+                  'Tu palabra está oculta',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: compact ? 18 : null,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!compact) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pulsa el botón cuando estés listo',
+                    style: TextStyle(color: Colors.grey.shade600),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: compact ? 16 : 32),
+        SizedBox(
+          width: double.infinity,
+          height: compact ? 48 : 60,
+          child: FilledButton.icon(
+            onPressed: _revealRole,
+            icon: Icon(Icons.visibility, size: compact ? 20 : 28),
+            label: Text(
+              'VER MI ROL',
+              style: TextStyle(fontSize: compact ? 16 : 18, fontWeight: FontWeight.bold),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRevealedState(bool isImpostor, {bool compact = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ScaleTransition(
+          scale: _scaleAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(compact ? 12 : 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                border: Border.all(
+                  color: isImpostor ? Colors.red.shade800 : Colors.blue.shade800,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    isImpostor ? Icons.warning : Icons.check_circle,
+                    size: compact ? 40 : 60,
+                    color: isImpostor ? Colors.red.shade700 : Colors.blue.shade700,
+                  ),
+                  SizedBox(height: compact ? 8 : 16),
+                  if (!isImpostor && _categoryName != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        _categoryName!.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: compact ? 8 : 20),
+                  ],
+                  Text(
+                    isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: compact ? 22 : 32,
+                      fontWeight: FontWeight.bold,
+                      color: isImpostor ? Colors.red.shade400 : Colors.blue.shade400,
+                      letterSpacing: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (isImpostor && !compact) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      '¡No dejes que te descubran!',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: compact ? 16 : 32),
+        SizedBox(
+          width: double.infinity,
+          height: compact ? 48 : 60,
+          child: FilledButton.icon(
+            onPressed: _nextPlayer,
+            icon: Icon(
+              _currentPlayer == _playerCount - 1 ? Icons.check : Icons.arrow_forward,
+              size: compact ? 20 : 28,
+            ),
+            label: Text(
+              _currentPlayer == _playerCount - 1 ? 'FINALIZAR' : 'SIGUIENTE JUGADOR',
+              style: TextStyle(fontSize: compact ? 16 : 18, fontWeight: FontWeight.bold),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- LAYOUTS PRINCIPALES ---
+
+  // Vertical
+  Widget _buildPortraitLayout(bool isImpostor, String currentName) {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 80, color: Colors.red.shade700),
-                const SizedBox(height: 24),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
+                _buildPlayerInfo(currentName),
+                const SizedBox(height: 48),
+                if (!_revealed) 
+                  _buildHiddenState() 
+                else 
+                  _buildRevealedState(isImpostor),
+              ],
+            ),
+          ),
+        ),
+        if (_bannerAd != null && _isAdLoaded)
+          Container(
+            alignment: Alignment.center,
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+      ],
+    );
+  }
+
+  // Horizontal (Landscape)
+  Widget _buildLandscapeLayout(bool isImpostor, String currentName) {
+    return Column(
+      children: [
+        // Contenido principal arriba
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // IZQUIERDA: Info Jugador
+                Expanded(
+                  flex: 4,
+                  child: SingleChildScrollView(
+                    child: _buildPlayerInfo(currentName, compact: true)
+                  ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Volver'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
+                
+                const SizedBox(width: 32),
+                
+                // DERECHA: Acciones (Dentro de un SingleChildScrollView por seguridad)
+                Expanded(
+                  flex: 6,
+                  child: SingleChildScrollView(
+                    child: !_revealed 
+                      ? _buildHiddenState(compact: true) 
+                      : _buildRevealedState(isImpostor, compact: true),
                   ),
                 ),
               ],
             ),
           ),
         ),
+        
+        // Banner abajo, fuera del scroll para que no tape
+        if (_bannerAd != null && _isAdLoaded)
+          Container(
+            alignment: Alignment.center,
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(child: Text(_error!)),
       );
     }
 
     final isImpostor = _currentPlayer == _impostorIndex;
     final currentName = widget.playerNames[_currentPlayer];
     final progress = (_currentPlayer + 1) / _playerCount;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
@@ -235,205 +457,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Avatar y nombre del jugador
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade700.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 60,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        currentName,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 48),
-                      
-                      // Área de revelación
-                      if (!_revealed) ...[
-                        Card(
-                          elevation: 8,
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.visibility_off,
-                                  size: 60,
-                                  color: Colors.grey.shade700,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Tu palabra está oculta',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Pulsa el botón cuando estés listo',
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 60,
-                          child: FilledButton.icon(
-                            onPressed: _revealRole,
-                            icon: const Icon(Icons.visibility, size: 28),
-                            label: const Text(
-                              'VER MI ROL',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                            ),
-                          ),
-                        ),
-                      ] else ...[
-                        //Tarjeta de revelación con estilo oscuro (anti-reflejos)
-                        ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1E1E1E),
-                                border: Border.all(
-                                  color: isImpostor ? Colors.red.shade800 : Colors.blue.shade800,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    isImpostor ? Icons.warning : Icons.check_circle,
-                                    size: 60,
-                                    color: isImpostor ? Colors.red.shade700 : Colors.blue.shade700,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  if (!isImpostor && _categoryName != null) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.05),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        _categoryName!.toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey,
-                                          letterSpacing: 2,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                  ],
-                                  Text(
-                                    isImpostor ? 'ERES EL IMPOSTOR' : _secretWord!.text.toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: isImpostor ? Colors.red.shade400 : Colors.blue.shade400,
-                                      letterSpacing: 2,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  if (isImpostor) ...[
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      '¡No dejes que te descubran!',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 60,
-                          child: FilledButton.icon(
-                            onPressed: _nextPlayer,
-                            icon: Icon(
-                              _currentPlayer == _playerCount - 1
-                                  ? Icons.check
-                                  : Icons.arrow_forward,
-                              size: 28,
-                            ),
-                            label: Text(
-                              _currentPlayer == _playerCount - 1
-                                  ? 'FINALIZAR'
-                                  : 'SIGUIENTE JUGADOR',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.green.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // --- ANUNCIO BANNER AL FINAL DE LA PANTALLA ---
-            if (_bannerAd != null && _isAdLoaded)
-              Container(
-                alignment: Alignment.center,
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-          ],
+        // ConstrainedBox para evitar que se desparrame en pantallas gigantes
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: isLandscape
+                ? _buildLandscapeLayout(isImpostor, currentName)
+                : _buildPortraitLayout(isImpostor, currentName),
+          ),
         ),
       ),
     );

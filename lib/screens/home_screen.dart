@@ -22,18 +22,16 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- VARIABLES PARA ANUNCIOS ---
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
-  InterstitialAd? _interstitialAd; // Variable para el anuncio pantalla completa
-  // ------------------------------
+  InterstitialAd? _interstitialAd;
 
   @override
   void initState() {
     super.initState();
     _initNameControllers();
-    _loadBanner();       // Cargar Banner inferior
-    _loadInterstitial(); // Pre-cargar el Intersticial para tenerlo listo
+    _loadBanner();
+    _loadInterstitial();
   }
 
-  // Carga el banner del Home
   void _loadBanner() {
     _bannerAd = BannerAd(
       adUnitId: AdHelper.homeBannerId,
@@ -53,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
     )..load();
   }
 
-  // Carga el anuncio Intersticial (Pantalla completa)
   void _loadInterstitial() {
     InterstitialAd.load(
       adUnitId: AdHelper.interstitialAdId,
@@ -64,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              _loadInterstitial(); // Cargar el siguiente para estar listos
+              _loadInterstitial();
             },
             onAdFailedToShowFullScreenContent: (ad, err) {
               ad.dispose();
@@ -89,14 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _bannerAd?.dispose();
-    _interstitialAd?.dispose(); // Limpiar intersticial
+    _interstitialAd?.dispose();
     for (final c in _nameControllers) {
       c.dispose();
     }
     super.dispose();
   }
-
-  // --- LÓGICA DE JUEGO Y CONTROL DE ANUNCIOS ---
 
   Future<void> _startGame() async {
     final categories = await _repo.getCategories();
@@ -128,35 +123,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
-    // 1. Navegar al juego y ESPERAR (await) a que el usuario vuelva
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => GameScreen(playerNames: playerNames),
       ),
     );
 
-    // 2. Al volver (cuando se cierra el GameEndDialog), verificamos si toca anuncio
     _checkAndShowInterstitial();
   }
 
   Future<void> _checkAndShowInterstitial() async {
-    // Incrementamos el contador
     final int gamesPlayed = await Preferences.incrementGamesPlayed();
-    debugPrint('Partidas jugadas: $gamesPlayed');
-
-    // Si es múltiplo de 2 mostramos anuncio
     if (gamesPlayed % 2 == 0) {
       if (_interstitialAd != null) {
         _interstitialAd!.show();
       } else {
-        debugPrint('Tocaría anuncio, pero aún no ha cargado.');
-        // Intentamos cargar uno por si acaso para la próxima
         _loadInterstitial();
       }
     }
   }
-
-  // ---------------------------------------------
 
   void _increasePlayers() {
     setState(() {
@@ -193,12 +178,284 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // --- WIDGETS ---
+
+  Widget _buildPlayerCounterCard({bool compact = false}) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(compact ? 12 : 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.groups, color: Colors.red.shade700, size: 28),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    'Número de jugadores',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: compact ? 18 : null,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: compact ? 12 : 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCircleButton(
+                  icon: Icons.remove,
+                  onPressed: _playerCount > 3 ? _decreasePlayers : null,
+                  compact: compact,
+                ),
+                SizedBox(width: compact ? 20 : 32),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 24 : 32, 
+                    vertical: compact ? 12 : 16
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.red.shade700, width: 2),
+                  ),
+                  child: Text(
+                    '$_playerCount',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade700,
+                          fontSize: compact ? 32 : null,
+                        ),
+                  ),
+                ),
+                SizedBox(width: compact ? 20 : 32),
+                _buildCircleButton(
+                  icon: Icons.add,
+                  onPressed: _playerCount < 12 ? _increasePlayers : null,
+                  compact: compact,
+                ),
+              ],
+            ),
+            if (!compact) ...[
+              const SizedBox(height: 12),
+              Text(
+                '(3-12 jugadores)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon, 
+    VoidCallback? onPressed, 
+    bool compact = false
+  }) {
+    return Container(
+      width: compact ? 40 : 50,
+      height: compact ? 40 : 50,
+      decoration: BoxDecoration(
+        color: onPressed != null
+            ? Colors.red.shade700.withValues(alpha: 0.2)
+            : Colors.grey.shade800.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        iconSize: compact ? 20 : 28,
+        color: onPressed != null ? Colors.red.shade700 : Colors.grey,
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 56,
+          child: FilledButton.icon(
+            onPressed: _startGame,
+            icon: const Icon(Icons.play_arrow),
+            label: const Text(
+              'Comenzar Partida',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 56,
+          child: OutlinedButton.icon(
+            onPressed: _openCategories,
+            icon: const Icon(Icons.category),
+            label: const Text('Categorías', style: TextStyle(fontSize: 16)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Widget unificado para la lista de jugadores
+  Widget _buildPlayerList({bool compact = false}) {
+    // Si es compact (horizontal), usamos shrinkWrap para que la lista
+    // ocupe solo el espacio necesario y se pueda centrar.
+    // Si no es compact (vertical), usamos Expanded fuera de este método.
+    return ListView.builder(
+      shrinkWrap: compact, 
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 20), 
+      itemCount: _playerCount,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: TextField(
+            controller: _nameControllers[index],
+            decoration: InputDecoration(
+              labelText: 'Jugador ${index + 1}',
+              prefixIcon: Icon(
+                Icons.account_circle,
+                color: Colors.red.shade700.withValues(alpha: 0.7),
+              ),
+              hintText: 'Nombre opcional',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- LAYOUTS ---
+
+  Widget _buildPortraitLayout(bool isKeyboardOpen) {
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildPlayerCounterCard(),
+                const SizedBox(height: 16),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person, color: Colors.red.shade700, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Nombres de los jugadores',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Expanded(child: _buildPlayerList(compact: false)),
+                
+                if (!isKeyboardOpen) ...[
+                  const SizedBox(height: 16),
+                  _buildActionButtons(),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout(bool isKeyboardOpen) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // IZQUIERDA: Controles
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPlayerCounterCard(compact: true),
+                    const SizedBox(height: 16),
+                    _buildActionButtons(), 
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        
+        // DERECHA: Lista de jugadores
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.person, color: Colors.red.shade700, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Nombres',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: _buildPlayerList(compact: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // DETECCIÓN DE TECLADO
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -220,181 +477,26 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.groups, color: Colors.red.shade700, size: 28),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Número de jugadores',
-                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: _playerCount > 3 
-                                      ? Colors.red.shade700.withValues(alpha: 0.2)
-                                      : Colors.grey.shade800.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: IconButton(
-                                    onPressed: _playerCount > 3 ? _decreasePlayers : null,
-                                    icon: const Icon(Icons.remove),
-                                    iconSize: 32,
-                                    color: _playerCount > 3 ? Colors.red.shade700 : Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(width: 32),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade700.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.red.shade700, width: 2),
-                                  ),
-                                  child: Text(
-                                    '$_playerCount',
-                                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red.shade700,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 32),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: _playerCount < 12
-                                      ? Colors.red.shade700.withValues(alpha: 0.2)
-                                      : Colors.grey.shade800.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: IconButton(
-                                    onPressed: _playerCount < 12 ? _increasePlayers : null,
-                                    icon: const Icon(Icons.add),
-                                    iconSize: 32,
-                                    color: _playerCount < 12 ? Colors.red.shade700 : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '(3-12 jugadores)',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Icon(Icons.person, color: Colors.red.shade700, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Nombres de los jugadores',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      key: const ValueKey('lista_jugadores'), 
-                      child: ListView.builder(
-                        physics: const ClampingScrollPhysics(), 
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemCount: _playerCount,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: TextField(
-                              controller: _nameControllers[index],
-                              decoration: InputDecoration(
-                                labelText: 'Jugador ${index + 1}',
-                                prefixIcon: Icon(
-                                  Icons.account_circle,
-                                  color: Colors.red.shade700.withValues(alpha: 0.7),
-                                ),
-                                hintText: 'Nombre opcional',
-                                
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    // Si el teclado esta cerrado mostramos botones de acción
-                    if (!isKeyboardOpen) ...[
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(
-                            height: 56,
-                            child: FilledButton.icon(
-                              onPressed: _startGame,
-                              icon: const Icon(Icons.play_arrow, size: 24),
-                              label: const Text(
-                                'Comenzar Partida',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.red.shade700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 56,
-                            child: OutlinedButton.icon(
-                              onPressed: _openCategories,
-                              icon: const Icon(Icons.category, size: 24),
-                              label: const Text(
-                                'Categorías',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000), // Ancho máximo general
+                  child: isLandscape 
+                    ? _buildLandscapeLayout(isKeyboardOpen) 
+                    : _buildPortraitLayout(isKeyboardOpen),
                 ),
               ),
             ),
             
-            // --- BANNER DEL HOME (Solo visible si el teclado está cerrado) ---
+            // Banner Fijo abajo
             if (_bannerAd != null && _isBannerLoaded && !isKeyboardOpen)
               Container(
                 alignment: Alignment.center,
                 width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
+                height: _bannerAd!.size.height.toDouble(), 
+                child: AdWidget(
+                  key: ValueKey(MediaQuery.of(context).orientation), 
+                  ad: _bannerAd!
+                ),
               ),
           ],
         ),

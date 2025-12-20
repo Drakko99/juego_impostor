@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // Importar
-import '../utils/ad_helper.dart'; // Importar Helper
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../utils/ad_helper.dart';
 
-/// Diálogo final que muestra quién empieza y permite revelar información
 class GameEndDialog extends StatefulWidget {
   final String starterName;
   final String secretWord;
@@ -30,7 +29,6 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
   late Animation<double> _wordScaleAnim;
   late Animation<double> _impostorScaleAnim;
 
-  // Variables del Anuncio
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
 
@@ -56,7 +54,7 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
       CurvedAnimation(parent: _impostorAnimController, curve: Curves.elasticOut),
     );
 
-    _loadAd(); // Cargar anuncio
+    _loadAd();
   }
 
   void _loadAd() {
@@ -79,7 +77,7 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
 
   @override
   void dispose() {
-    _bannerAd?.dispose(); // Limpiar anuncio
+    _bannerAd?.dispose();
     _wordAnimController.dispose();
     _impostorAnimController.dispose();
     super.dispose();
@@ -95,8 +93,161 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
     _impostorAnimController.forward();
   }
 
+  Widget _buildStarterInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Todos los jugadores conocen su rol.',
+          style: TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red.shade700.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.shade700, width: 2),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.play_arrow, color: Colors.red.shade700, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Empieza:', style: TextStyle(fontSize: 14)),
+                    Text(
+                      widget.starterName,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRevealButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Revelar información:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade500,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Palabra
+        if (!_wordRevealed)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _revealWord,
+              icon: Icon(Icons.visibility, color: Colors.blue.shade700),
+              label: const Text('Revelar palabra'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blue.shade700,
+                side: BorderSide(color: Colors.blue.shade700),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          )
+        else
+          ScaleTransition(
+            scale: _wordScaleAnim,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Text(widget.categoryName.toUpperCase(),
+                      style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  Text(widget.secretWord.toUpperCase(),
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        
+        const SizedBox(height: 12),
+        
+        // Impostor
+        if (!_impostorRevealed)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _revealImpostor,
+              icon: Icon(Icons.warning, color: Colors.orange.shade700),
+              label: const Text('Revelar impostor'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.orange.shade700,
+                side: BorderSide(color: Colors.orange.shade700),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          )
+        else
+          ScaleTransition(
+            scale: _impostorScaleAnim,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade900, Colors.red.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  const Text('EL IMPOSTOR ERA',
+                      style: TextStyle(fontSize: 12, color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  Text(widget.impostorName,
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return AlertDialog(
       backgroundColor: const Color(0xFF1E1E1E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -107,212 +258,42 @@ class _GameEndDialogState extends State<GameEndDialog> with TickerProviderStateM
           const Expanded(child: Text('¡Listo para jugar!')),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Todos los jugadores conocen su rol.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            
-            // Jugador que empieza
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.shade700.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade700, width: 2),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.play_arrow, color: Colors.red.shade700, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Empieza:', style: TextStyle(fontSize: 14)),
-                        Text(
-                          widget.starterName,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 12),
-            
-            // Sección de revelaciones
-            Text(
-              'Revelar información:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade500,
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Botón revelar palabra
-            if (!_wordRevealed) ...[
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _revealWord,
-                  icon: Icon(Icons.visibility, color: Colors.blue.shade700),
-                  label: const Text('Revelar palabra'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue.shade700,
-                    side: BorderSide(color: Colors.blue.shade700),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700), // Limitar ancho en tablet
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLandscape)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildStarterInfo()),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildRevealButtons()),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    _buildStarterInfo(),
+                    const SizedBox(height: 20),
+                    const Divider(),
+                    const SizedBox(height: 12),
+                    _buildRevealButtons(),
+                  ],
                 ),
-              ),
-            ] else ...[
-              ScaleTransition(
-                scale: _wordScaleAnim,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade900, Colors.blue.shade700],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          widget.categoryName.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        widget.secretWord.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+              
+              const SizedBox(height: 20),
+              if (_bannerAd != null && _isAdLoaded)
+                Container(
+                  alignment: Alignment.center,
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
                 ),
-              ),
             ],
-            
-            const SizedBox(height: 12),
-            
-            // Botón revelar impostor
-            if (!_impostorRevealed) ...[
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _revealImpostor,
-                  icon: Icon(Icons.warning, color: Colors.orange.shade700),
-                  label: const Text('Revelar impostor'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade700,
-                    side: BorderSide(color: Colors.orange.shade700),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ] else ...[
-              ScaleTransition(
-                scale: _impostorScaleAnim,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.red.shade900, Colors.red.shade700],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'EL IMPOSTOR ERA',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white70,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.impostorName,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 20),
-            // --- ANUNCIO EN EL DIÁLOGO ---
-            if (_bannerAd != null && _isAdLoaded)
-              Container(
-                alignment: Alignment.center,
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-          ],
+          ),
         ),
       ),
       actions: [

@@ -75,9 +75,115 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         .then((_) => _loadCategories());
   }
 
+  // Método auxiliar para construir la tarjeta y evitar duplicar código
+  Widget _buildCategoryCard(Category c) {
+    return Card(
+      elevation: c.enabled ? 6 : 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: c.enabled
+              ? Colors.red.shade700.withValues(alpha: 0.5)
+              : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Icono
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: c.enabled
+                    ? Colors.red.shade700.withValues(alpha: 0.2)
+                    : Colors.grey.shade800.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                c.isCustom
+                    ? Icons.edit
+                    : (c.isAdult ? Icons.explicit : Icons.category),
+                color: c.enabled ? Colors.red.shade700 : Colors.grey,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Nombre y badge +18
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // Se ajusta al contenido
+                children: [
+                  Text(
+                    c.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: c.enabled ? Colors.white : Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (c.isAdult) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade700.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.orange.shade700,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        '+18',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade300,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Botón añadir (solo para personalizada)
+            if (c.isCustom) ...[
+              IconButton(
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.red.shade700,
+                  size: 28,
+                ),
+                tooltip: 'Añadir palabras',
+                onPressed: _openCustomWords,
+              ),
+            ],
+            // Switch
+            Switch(
+              value: c.enabled,
+              onChanged: (val) => _toggleCategory(c, val),
+              activeColor: Colors.red.shade700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final enabledCount = _categories.where((c) => c.enabled).length;
+    // Detectamos si estamos en apaisado para cambiar de Lista a Grid
+    final bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,18 +195,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: enabledCount > 0 
-                    ? Colors.green.shade700.withValues(alpha: 0.3)
-                    : Colors.red.shade700.withValues(alpha: 0.3),
+                  color: enabledCount > 0
+                      ? Colors.green.shade700.withValues(alpha: 0.3)
+                      : Colors.red.shade700.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: enabledCount > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                    color: enabledCount > 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                   ),
                 ),
                 child: Text(
                   '$enabledCount activas',
                   style: TextStyle(
-                    color: enabledCount > 0 ? Colors.green.shade300 : Colors.red.shade300,
+                    color: enabledCount > 0
+                        ? Colors.green.shade300
+                        : Colors.red.shade300,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -119,132 +229,48 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.category_outlined, size: 80, color: Colors.grey.shade700),
+                            Icon(Icons.category_outlined,
+                                size: 80, color: Colors.grey.shade700),
                             const SizedBox(height: 16),
                             Text(
                               'No hay categorías disponibles',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.grey.shade600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
                             ),
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _categories.length,
-                        itemBuilder: (context, index) {
-                          final c = _categories[index];
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: Card(
-                              elevation: c.enabled ? 6 : 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: c.enabled 
-                                    ? Colors.red.shade700.withValues(alpha: 0.5)
-                                    : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                child: Row(
-                                  children: [
-                                    // Icono
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: c.enabled 
-                                          ? Colors.red.shade700.withValues(alpha: 0.2)
-                                          : Colors.grey.shade800.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        c.isCustom ? Icons.edit : (c.isAdult ? Icons.explicit : Icons.category),
-                                        color: c.enabled ? Colors.red.shade700 : Colors.grey,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Nombre y badge +18
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            c.name,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: c.enabled ? Colors.white : Colors.grey.shade600,
-                                            ),
-                                          ),
-                                          if (c.isAdult) ...[
-                                            const SizedBox(height: 4),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange.shade700.withValues(alpha: 0.3),
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(
-                                                  color: Colors.orange.shade700,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                '+18',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.orange.shade300,
-                                                  letterSpacing: 1,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                    // Botón añadir (solo para personalizada)
-                                    if (c.isCustom) ...[
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.add_circle_outline,
-                                          color: Colors.red.shade700,
-                                          size: 28,
-                                        ),
-                                        tooltip: 'Añadir palabras',
-                                        onPressed: _openCustomWords,
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    // Switch
-                                    Switch(
-                                      value: c.enabled,
-                                      onChanged: (val) => _toggleCategory(c, val),
-                                      thumbColor: WidgetStateProperty.resolveWith((states) {
-                                        if (states.contains(WidgetState.selected)) {
-                                          return Colors.red.shade700;
-                                        }
-                                        return null;
-                                      }),
-                                      trackColor: WidgetStateProperty.resolveWith((states) {
-                                        if (states.contains(WidgetState.selected)) {
-                                          return Colors.red.shade700.withValues(alpha: 0.5);
-                                        }
-                                        return null;
-                                      }),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                    : isLandscape
+                        // MODO HORIZONTAL / TABLET: Usamos GridView
+                        ? GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400,
+                              childAspectRatio: 2.5,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
                             ),
-                          );
-                        },
-                      ),
+                            itemCount: _categories.length,
+                            itemBuilder: (context, index) {
+                              return _buildCategoryCard(_categories[index]);
+                            },
+                          )
+                        // MODO VERTICAL (MÓVIL): Usamos ListView (Compacto)
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _categories.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: _buildCategoryCard(_categories[index]),
+                              );
+                            },
+                          ),
           ),
           // --- BANNER ---
           if (_bannerAd != null && _isAdLoaded)
